@@ -5,6 +5,7 @@ import { DashboardScreen } from './components/DashboardScreen';
 import { RecipeLibraryScreen } from './components/RecipeLibraryScreen';
 import { RecipeEditorScreen } from './components/RecipeEditorScreen';
 import { ContainerManagementScreen } from './components/ContainerManagementScreen';
+import { DispensingScreen } from './components/DispensingScreen';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
             <Route path="/recipes/new" element={<RecipeEditorScreen />} />
             <Route path="/recipes/edit/:id" element={<RecipeEditorScreen />} />
             <Route path="/containers" element={<ContainerManagementScreen />} />
+            <Route path="/dispensing" element={<DispensingScreen />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

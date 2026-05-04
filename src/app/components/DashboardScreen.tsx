@@ -10,11 +10,12 @@ import {
 } from '@mui/icons-material';
 import { BottomNavigation } from './BottomNavigation';
 import { LinearProgress } from '@mui/material';
+import { DispenseConfirmModal } from './DispenseConfirmModal';
 
 export function DashboardScreen() {
   const navigate = useNavigate();
-  const [dispensing, setDispensing] = useState(false);
-  const [currentRecipe, setCurrentRecipe] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<{ id: number; name: string } | null>(null);
 
   const containers = [
     { id: 1, name: 'Smoked Paprika', level: 85, unit: 'g', maxCapacity: 200, lowThreshold: 15 },
@@ -39,14 +40,30 @@ export function DashboardScreen() {
     return 'bg-green-500';
   };
 
-  const handleDispense = (recipeId: number) => {
-    setDispensing(true);
-    setCurrentRecipe(`Recipe ${recipeId}`);
+  const handleDispense = (recipeId: number, recipeName: string) => {
+    setSelectedRecipe({ id: recipeId, name: recipeName });
+    setShowConfirmModal(true);
   };
 
-  const handleEmergencyStop = () => {
-    setDispensing(false);
-    setCurrentRecipe(null);
+  const handleStartDispensing = () => {
+    setShowConfirmModal(false);
+    if (selectedRecipe) {
+      navigate('/dispensing', {
+        state: {
+          recipeName: selectedRecipe.name,
+          spices: [
+            { name: 'Smoked Paprika', quantity: 5 },
+            { name: 'Cumin', quantity: 8 },
+            { name: 'Turmeric', quantity: 3 },
+          ],
+        },
+      });
+    }
+  };
+
+  const handleAbortDispensing = () => {
+    setShowConfirmModal(false);
+    setSelectedRecipe(null);
   };
 
   return (
@@ -81,21 +98,13 @@ export function DashboardScreen() {
         </div>
       )}
 
-      {/* Emergency Stop - Only visible when dispensing */}
-      {dispensing && (
-        <div className="sticky top-0 z-50 bg-red-600 p-4 shadow-lg">
-          <button
-            onClick={handleEmergencyStop}
-            className="w-full bg-white text-red-600 py-4 rounded-lg font-bold text-lg flex items-center justify-center gap-2 hover:bg-red-50 active:bg-red-100 transition-colors"
-          >
-            <StopCircle className="text-3xl" />
-            EMERGENCY STOP
-          </button>
-          <p className="text-center text-white text-sm mt-2">
-            Dispensing: {currentRecipe}
-          </p>
-        </div>
-      )}
+      {/* Dispense Confirmation Modal */}
+      <DispenseConfirmModal
+        open={showConfirmModal}
+        recipeName={selectedRecipe?.name || ''}
+        onStart={handleStartDispensing}
+        onAbort={handleAbortDispensing}
+      />
 
       <div className="flex-1 overflow-auto">
         {/* Spice Containers Grid */}
@@ -155,9 +164,8 @@ export function DashboardScreen() {
                   <p className="text-sm text-gray-500">{recipe.lastUsed}</p>
                 </div>
                 <button
-                  onClick={() => handleDispense(recipe.id)}
-                  disabled={dispensing}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => handleDispense(recipe.id, recipe.name)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <PlayArrow />
                   <span className="text-sm font-medium">Dispense</span>

@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Add, Search, Edit, Delete, PlayArrow } from '@mui/icons-material';
 import { BottomNavigation } from './BottomNavigation';
+import { DispenseConfirmModal } from './DispenseConfirmModal';
 
 export function RecipeLibraryScreen() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<{ id: number; name: string } | null>(null);
 
   const recipes = [
     { id: 1, name: 'Classic Curry', spiceCount: 8, lastUsed: '2 hours ago', favorite: true },
@@ -24,6 +27,32 @@ export function RecipeLibraryScreen() {
     if (confirm(`Delete recipe "${recipeName}"?`)) {
       // Handle delete
     }
+  };
+
+  const handleDispense = (recipeId: number, recipeName: string) => {
+    setSelectedRecipe({ id: recipeId, name: recipeName });
+    setShowConfirmModal(true);
+  };
+
+  const handleStartDispensing = () => {
+    setShowConfirmModal(false);
+    if (selectedRecipe) {
+      navigate('/dispensing', {
+        state: {
+          recipeName: selectedRecipe.name,
+          spices: [
+            { name: 'Smoked Paprika', quantity: 5 },
+            { name: 'Cumin', quantity: 8 },
+            { name: 'Turmeric', quantity: 3 },
+          ],
+        },
+      });
+    }
+  };
+
+  const handleAbortDispensing = () => {
+    setShowConfirmModal(false);
+    setSelectedRecipe(null);
   };
 
   return (
@@ -47,6 +76,14 @@ export function RecipeLibraryScreen() {
           />
         </div>
       </div>
+
+      {/* Dispense Confirmation Modal */}
+      <DispenseConfirmModal
+        open={showConfirmModal}
+        recipeName={selectedRecipe?.name || ''}
+        onStart={handleStartDispensing}
+        onAbort={handleAbortDispensing}
+      />
 
       {/* Recipe List */}
       <div className="flex-1 overflow-auto p-4">
@@ -73,6 +110,7 @@ export function RecipeLibraryScreen() {
               {/* Action Buttons */}
               <div className="grid grid-cols-3 border-t border-gray-200 divide-x divide-gray-200">
                 <button
+                  onClick={() => handleDispense(recipe.id, recipe.name)}
                   className="flex items-center justify-center gap-2 py-3 hover:bg-blue-50 transition-colors text-blue-600"
                 >
                   <PlayArrow />
